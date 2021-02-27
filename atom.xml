@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://ljheisenberg1072.github.io/"/>
-  <updated>2019-12-25T02:45:56.576Z</updated>
+  <updated>2021-02-27T16:23:27.877Z</updated>
   <id>https://ljheisenberg1072.github.io/</id>
   
   <author>
@@ -15,6 +15,35 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Laravel嵌套评论的实现</title>
+    <link href="https://ljheisenberg1072.github.io/2021/02/27/laravel-nested-comment-realization/"/>
+    <id>https://ljheisenberg1072.github.io/2021/02/27/laravel-nested-comment-realization/</id>
+    <published>2021-02-27T12:30:44.000Z</published>
+    <updated>2021-02-27T16:23:27.877Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote><p>经常我们看见评论显示形式有很多，比如 ‘@’ 某某，又或者像知乎的收缩式的评论，又或者是嵌套式的评论，那么最一开始也是最常见的就是嵌套式评论，因为这个更加醒目.</p></blockquote><h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><ol><li>设计三张表 users,posts,comments，表结构如下:</li></ol><p>users</p><pre><code class="php">Schema::create(&#39;users&#39;, function (Blueprint $table) {    $table-&gt;increments(&#39;id&#39;);    $table-&gt;string(&#39;name&#39;);    $table-&gt;string(&#39;email&#39;)-&gt;unique();    $table-&gt;string(&#39;password&#39;);    $table-&gt;rememberToken();    $table-&gt;timestamps();});</code></pre><p>posts</p><pre><code class="php">Schema::create(&#39;posts&#39;, function (Blueprint $table) {    $table-&gt;increments(&#39;id&#39;);    $table-&gt;string(&#39;title&#39;);    $table-&gt;integer(&#39;user_id&#39;)-&gt;index();    $table-&gt;text(&#39;content&#39;);    $table-&gt;timestamps();});</code></pre><p>comments</p><p>其中 <code>parent_id</code> 主要表示该评论所属评论的 id, 如果不属于任何评论则为 null</p><pre><code class="php">Schema::create(&#39;comments&#39;, function (Blueprint $table) {      $table-&gt;increments(&#39;id&#39;);      $table-&gt;integer(&#39;user_id&#39;)-&gt;index();      $table-&gt;integer(&#39;post_id&#39;)-&gt;index();      $table-&gt;integer(&#39;parent_id&#39;)-&gt;index()-&gt;nullable();      $table-&gt;text(&#39;body&#39;);      $table-&gt;timestamps();  });</code></pre><ol start="2"><li>表之间的关系如下</li></ol><p>Post.php 文件</p><pre><code class="php">/**  * 一篇文章有多个评论  * @return \Illuminate\Database\Eloquent\Relations\HasMany  */public function comments(){    return $this-&gt;hasMany(Comment::class);}/**  * 获取这篇文章的评论以parent_id来分组  * @return static  */public function getComments(){    return $this-&gt;comments()-&gt;with(&#39;owner&#39;)-&gt;get()-&gt;groupBy(&#39;parent_id&#39;);}</code></pre><p>Comments.php 文件</p><pre><code class="php">/**  * 这个评论的所属用户  * @return \Illuminate\Database\Eloquent\Relations\BelongsTo  */public function owner(){    return $this-&gt;belongsTo(User::class, &#39;user_id&#39;);}/**  * 这个评论的子评论  * @return \Illuminate\Database\Eloquent\Relations\HasMany  */public function replies(){    return $this-&gt;hasMany(Comment::class, &#39;parent_id&#39;);}</code></pre><h3 id="逻辑编写"><a href="#逻辑编写" class="headerlink" title="逻辑编写"></a>逻辑编写</h3><p>我们所要实现的嵌套评论其实在我们准备工作中已经 有点思路了，我们首先将一篇文章显示出来，同时利用文章与评论的一对多关系，进行显示所有的评论，但是我们的评论里面涉及到一个字段就是<code>parent_id</code>，这个字段其实非常的特殊，我们利用这个字段来进行分组，代码就是上面的<code>return $this-&gt;comments()-&gt;with(&#39;owner&#39;)-&gt;get()-&gt;groupBy(&#39;parent_id&#39;)</code>, 具体的过程如下:</p><p>web.php 文件</p><pre><code class="php">\Auth::loginUsingId(1); //用户id为1的登录//显示文章和相应的评论Route::get(&#39;/post/show/{post}&#39;, function (\App\Post $post) {    $post-&gt;load(&#39;comments.owner&#39;);    $comments = $post-&gt;getComments();    $comments[&#39;root&#39;] = $comments[&#39;&#39;];    unset($comments[&#39;&#39;]);    return view(&#39;posts.show&#39;, compact(&#39;post&#39;, &#39;comments&#39;));});//用户进行评论Route::post(&#39;post/{post}/comments&#39;, function (\App\Post $post) {    $post-&gt;comments()-&gt;create([        &#39;body&#39; =&gt; request(&#39;body&#39;),        &#39;user_id&#39; =&gt; \Auth::id(),        &#39;parent_id&#39; =&gt; request(&#39;parent_id&#39;, null),    ]);    return back();});</code></pre><h3 id="视图代码"><a href="#视图代码" class="headerlink" title="视图代码"></a>视图代码</h3><p>视图方面我们需要实现嵌套，那么随着用户互相评论的越来越多的话，那么嵌套的层级也就越多，所以说，我们这里需要使用各小技巧来显示整个评论，我们使用 <code>@include()</code> 函数来显示，那么我们试图的结构如下:</p><ul><li>comments<ul><li>comments.blade.php</li><li>form.blade.php</li><li>list.blade.php</li></ul></li><li>posts<ul><li>show.blade.php</li></ul></li></ul><p>代码如下:</p><p>show.blade.php</p><pre><code class="php">&lt;!DOCTYPE html&gt;&lt;html lang=&quot;en&quot;&gt;&lt;head&gt;    &lt;meta charset=&quot;utf-8&quot;&gt;    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;&gt;    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;    &lt;link href=&quot;//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css&quot; rel=&quot;stylesheet&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;container&quot; style=&quot;margin-top: 100px&quot;&gt;    &lt;div class=&quot;col-md-10 col-md-offset-1&quot;&gt;        &lt;h2&gt;{{$post->title}}&lt;/h2&gt;        &lt;h4&gt;{{$post->content}}&lt;/h4&gt;        &lt;hr&gt;        @include(&#39;comments.list&#39;,[&#39;collections&#39;=&gt;$comments[&#39;root&#39;]])        &lt;h3&gt;留下您的评论&lt;/h3&gt;        @include(&#39;comments.form&#39;,[&#39;parentId&#39;=&gt;$post-&gt;id])    &lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;</code></pre><p>comment.blade.php</p><pre><code class="php">&lt;div class=&quot;col-md-12&quot;&gt;    &lt;h5&gt;&lt;span style=&quot;color:#31b0d5&quot;&gt;{{$comment->owner->name}}&lt;/span&gt;:&lt;/h5&gt;    &lt;h5&gt;{{$comment->body}}&lt;/h5&gt;    @include(&#39;comments.form&#39;,[&#39;parentId&#39;=&gt;$comment-&gt;id])    @if(isset($comments[$comment-&gt;id]))        @include(&#39;comments.list&#39;,[&#39;collections&#39;=&gt;$comments[$comment-&gt;id]])    @endif    &lt;hr&gt;&lt;/div&gt;</code></pre><p>form.blade.php</p><pre><code class="php">&lt;form method=&quot;POST&quot; action=&quot;{{url('post/'.$post->id.'/comments')}}&quot; accept-charset=&quot;UTF-8&quot;&gt;    {{csrf_field()}}    @if(isset($parentId))        &lt;input type=&quot;hidden&quot; name=&quot;parent_id&quot; value=&quot;{{$parentId}}&quot;&gt;    @endif    &lt;div class=&quot;form-group&quot;&gt;        &lt;label for=&quot;body&quot; class=&quot;control-label&quot;&gt;Info:&lt;/label&gt;        &lt;textarea id=&quot;body&quot; name=&quot;body&quot;  class=&quot;form-control&quot; required=&quot;required&quot;&gt;&lt;/textarea&gt;    &lt;/div&gt;    &lt;button type=&quot;submit&quot; class=&quot;btn btn-success&quot;&gt;回复&lt;/button&gt;&lt;/form&gt;</code></pre><p>list.blade.php</p><pre><code class="php">@foreach($collections as $comment)    @include(&#39;comments.comment&#39;,[&#39;comment&#39;=&gt;$comment])@endforeach</code></pre>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;blockquote&gt;
+&lt;p&gt;经常我们看见评论显示形式有很多，比如 ‘@’ 某某，又或者像知乎的收缩式的评论，又或者是嵌套式的评论，那么最一开始也是最常见的就是嵌套式评论，因为这个更加醒目.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&quot;准备工作&quot;&gt;&lt;a href=&quot;#准
+      
+    
+    </summary>
+    
+    
+      <category term="Comment" scheme="https://ljheisenberg1072.github.io/categories/Comment/"/>
+    
+    
+      <category term="评论" scheme="https://ljheisenberg1072.github.io/tags/%E8%AF%84%E8%AE%BA/"/>
+    
+  </entry>
   
   <entry>
     <title>PHP 代码简洁之道</title>
