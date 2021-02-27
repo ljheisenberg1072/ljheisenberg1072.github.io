@@ -2,9 +2,9 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Laravel嵌套评论的实现 | LJHeisenberg&#39; Blog</title>
-  <meta name="keywords" content=" 评论 ">
-  <meta name="description" content="Laravel嵌套评论的实现 | LJHeisenberg&#39; Blog">
+  <title>会员积分体系设计 | LJHeisenberg&#39; Blog</title>
+  <meta name="keywords" content=" 会员 ">
+  <meta name="description" content="会员积分体系设计 | LJHeisenberg&#39; Blog">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="description" content="个人简介ljheisenberg， 目前从事 PHP 及网站运维相关工作 终生学习，每日精进 最近在公司使用 Laravel 框架重构公司的项目 联系方式 QQ：2638484046 Email：ljheisenberg@163.com">
 <meta name="keywords" content="ljheisenberg">
@@ -279,9 +279,9 @@
 </aside>
 <div class="post">
     <div class="pjax">
-        <article id="post-laravel-nested-comment-realization" class="article article-type-post" itemscope itemprop="blogPost">
+        <article id="post-design-of-membership-points-system" class="article article-type-post" itemscope itemprop="blogPost">
     
-        <h1 class="article-title">Laravel嵌套评论的实现</h1>
+        <h1 class="article-title">会员积分体系设计</h1>
     
     <div class="article-meta">
         
@@ -289,26 +289,26 @@
         
         <span class="book">
             
-                <a  data-rel="Comment">Comment</a>
+                <a  data-rel="Member">Member</a>
             
         </span>
         
         
         <span class="tag">
             
-            <a class="color3">评论</a>
+            <a class="color3">会员</a>
             
         </span>
         
     </div>
     <div class="article-meta">
         
-        创建时间:<time class="date" title='更新时间: 2021-02-28 00:23:27'>2021-02-27 20:30</time>
+        创建时间:<time class="date" title='更新时间: 2021-02-28 01:06:57'>2021-02-28 00:54</time>
         
     </div>
     <div class="article-meta">
         
-        <span>字数:1.1k</span>
+        <span>字数:2.9k</span>
         
         
         <span id="busuanzi_container_page_pv">
@@ -338,7 +338,7 @@
     
     <div class="toc-ref">
     
-        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#准备工作"><span class="toc-text">准备工作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#逻辑编写"><span class="toc-text">逻辑编写</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#视图代码"><span class="toc-text">视图代码</span></a></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#需求场景分析"><span class="toc-text">需求场景分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#其它"><span class="toc-text">其它</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#思考"><span class="toc-text">思考</span></a></li></ol></li></ol>
     
 <style>
     .left-col .switch-btn,
@@ -354,166 +354,186 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <blockquote>
-<p>经常我们看见评论显示形式有很多，比如 ‘@’ 某某，又或者像知乎的收缩式的评论，又或者是嵌套式的评论，那么最一开始也是最常见的就是嵌套式评论，因为这个更加醒目.</p>
-</blockquote>
-<h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><ol>
-<li>设计三张表 users,posts,comments，表结构如下:</li>
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>积分体系是对用户行为的一种反馈，本质是用户忠诚度计划的一部分。能够一定层面上解决用户的 “促活、留存” 问题。当然，最重要的还是看公司有多少资源投入。下面讲下如何设计一个比较基础的通用会员积分体系。</p>
+<h2 id="需求场景分析"><a href="#需求场景分析" class="headerlink" title="需求场景分析"></a>需求场景分析</h2><ol>
+<li>是否对所有用户（新用户和老用户）？</li>
+<li>积分的使用。可否当现金？兑换商品？</li>
+<li>荣誉徽章制度？</li>
+<li>如何获得积分？<br>……</li>
 </ol>
-<p>users</p>
-<pre><code class="php">Schema::create(&#39;users&#39;, function (Blueprint $table) {
-    $table-&gt;increments(&#39;id&#39;);
-    $table-&gt;string(&#39;name&#39;);
-    $table-&gt;string(&#39;email&#39;)-&gt;unique();
-    $table-&gt;string(&#39;password&#39;);
-    $table-&gt;rememberToken();
-    $table-&gt;timestamps();
-});</code></pre>
-<p>posts</p>
-<pre><code class="php">Schema::create(&#39;posts&#39;, function (Blueprint $table) {
-    $table-&gt;increments(&#39;id&#39;);
-    $table-&gt;string(&#39;title&#39;);
-    $table-&gt;integer(&#39;user_id&#39;)-&gt;index();
-    $table-&gt;text(&#39;content&#39;);
-    $table-&gt;timestamps();
-});</code></pre>
-<p>comments</p>
-<p>其中 <code>parent_id</code> 主要表示该评论所属评论的 id, 如果不属于任何评论则为 null</p>
-<pre><code class="php">Schema::create(&#39;comments&#39;, function (Blueprint $table) {
-      $table-&gt;increments(&#39;id&#39;);
-      $table-&gt;integer(&#39;user_id&#39;)-&gt;index();
-      $table-&gt;integer(&#39;post_id&#39;)-&gt;index();
-      $table-&gt;integer(&#39;parent_id&#39;)-&gt;index()-&gt;nullable();
-      $table-&gt;text(&#39;body&#39;);
-      $table-&gt;timestamps();
-  });</code></pre>
-<ol start="2">
-<li>表之间的关系如下</li>
+<p>我们可以设计出以下基础表。</p>
+<ol>
+<li>用户积分账户（不考虑在原有的用户增加字段，而设计新表。是因为这是一个比较独立的系统。后期可能会加一些其他需求）</li>
+<li>积分记录表（记录用户积分变动流水）</li>
+<li>用户签到表</li>
+<li>奖品（商品）表</li>
+<li>兑换 (购买) 订单表</li>
+<li>任务表</li>
+<li>完成任务记录表</li>
 </ol>
-<p>Post.php 文件</p>
-<pre><code class="php">/**
-  * 一篇文章有多个评论
-  * @return \Illuminate\Database\Eloquent\Relations\HasMany
-  */
-public function comments()
-{
-    return $this-&gt;hasMany(Comment::class);
-}
+<p>用户积分表,上一篇的用户钱包表有做sign验证，这里就不验证了。因为积分相对于金钱来说，安全要求没那么高。</p>
+<pre><code class="sql">CREATE TABLE `user_score` (
+  `user_uuid` char(32) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;用户id&#39;,
+  `level` tinyint(3) NOT NULL DEFAULT &#39;1&#39; COMMENT &#39;等级&#39;,
+  `total_score` int(11) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;总积分&#39;,
+  `usable_score` int(11) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;可用积分&#39;,
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;,
+  `update_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;修改时间&#39;,
+  `deleted` tinyint(1) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;是否删除&#39;,
+  PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT=&#39;用户积分账户表&#39;</code></pre>
+<p>记录积分流水信息。这里可以用一个字段的正负值来表示获得和使用积分。也可以用一个类型字段表示获得和支出</p>
+<pre><code class="sql">CREATE TABLE `score_record` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT &#39;auto id&#39;,
+  `user_uuid` char(32) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;用户id&#39;,
+  `source_id` int(11) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;来源id&#39;,
+  `source_type` tinyint(1) NOT NULL DEFAULT &#39;1&#39; COMMENT &#39;1 任务 2 系统赠送 3 取消订单 4 签到 5 兑换奖品 6过期&#39;,
+   `exprie_status` tinyint(1) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;是否过期0 没过期 1 过期&#39;,
+  `remark` varchar(64) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;备注&#39;,
+  `symbol` varchar(3) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;in 收入 out 支出&#39;,
+  `score` int(11) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;分值&#39;,
+   `expire_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;过期时间&#39;,
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;,
+  PRIMARY KEY (`id`),
+  KEY `UCID` (`user_uuid`,`create_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT=&#39;积分记录表&#39;</code></pre>
+<p>前端纪录表。</p>
+<pre><code class="sql">CREATE TABLE `user_sign_in` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT &#39;auto id&#39;,
+  `user_uuid` char(32) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;用户id&#39;,
+  `continue_day` smallint(6) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;持续签到天数&#39;,
+  `period_day` tinyint(3) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;周期内签到天数&#39;,
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;,
+  PRIMARY KEY (`id`),
+  KEY `UCID` (`user_uuid`,`create_at`),
+  KEY `create_at` (`create_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT=&#39;用户签到表&#39;</code></pre>
+<p>奖品表。</p>
+<pre><code class="sql">CREATE TABLE `prize` (
+ `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT &#39;auto id&#39;,
+  `score` int(11) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;所需积分&#39;,
+  `stock` int(11) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;库存&#39;,
+  `name` char(32) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;名称&#39;,
+  `img_url` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;图片url&#39;,
+  `introduction` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;简介&#39;,
+  `content` text COLLATE utf8mb4_general_ci NOT NULL COMMENT &#39;内容&#39;,
+  `status` tinyint(1) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;状态 0 草稿 1 发布 2  停用&#39;,
+  `sort` int(11) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;排序&#39;,
+  `action_user` varchar(32) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;操作人&#39;,
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;,
+  `update_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;修改时间&#39;,
+  `deleted` tinyint(1) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;是否删除&#39;,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT=&#39;奖品表&#39;</code></pre>
+<p>奖品订单表。这里的状态值。可以按系统其它表中的设计。</p>
+<pre><code class="sql">CREATE TABLE `prize_order` (
+ `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT &#39;auto id&#39;,
+  `user_uuid` char(32) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;用户id&#39;,
+   `prize_id` int(11) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;奖品id&#39;,
+  `deduct_score` int(11) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;扣除积分&#39;,
+  `status` tinyint(1) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;0 待审核 1 经审核 2 不通过，3取消&#39;,
+  `audit_at` datetime DEFAULT NULL COMMENT &#39;审核时间&#39;,
+  `remark` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;备注&#39;,
+  `action_user` varchar(32) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;操作人&#39;,
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;,
+  `update_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;修改时间&#39;,
+  `deleted` tinyint(1) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;是否删除&#39;,
+  PRIMARY KEY (`id`),
+  KEY `user_uuid` (`user_uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT=&#39;奖品兑换订单表&#39;</code></pre>
+<p>获取积分的方式有很多种。所以增加了一张任务表，</p>
+<pre><code class="sql">CREATE TABLE `task` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT &#39;auto id&#39;,
+  `name` varchar(32) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;简体名称&#39;,
+  `score` int(11) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;分值&#39;,
+  `status` tinyint(1) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;状态 0 草稿 1 发布 2 停用&#39;,
+  `sort` int(11) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;排序&#39;,
+  `is_pro` tinyint(1) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;1 pro专属&#39;,
+  `is_once` tinyint(1) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;1 一次性任务&#39;,
+  `link_params` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;任务链接参数&#39;,
+  `page_url` varchar(64) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;页面&#39;,
+  `thumb_url` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;图标&#39;,
+  `identify` varchar(32) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;标识符&#39;,
+  `remark` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;备注&#39;,
+  `action_user` varchar(32) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;操作人&#39;,
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;,
+  `update_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;修改时间&#39;,
+  `deleted` tinyint(1) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;是否删除&#39;,
+  PRIMARY KEY (`id`),
+  KEY `identify` (`identify`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT=&#39;任务表&#39;</code></pre>
+<p>任务完成表</p>
+<pre><code class="sql">CREATE TABLE `task_finish` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT &#39;auto id&#39;,
+  `user_uuid` char(32) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;用户id&#39;,
+  `task_id` int(11) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;任务Id&#39;,
+  `score_uuid` int(11) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;积分记录id&#39;,
+  `finish_score` int(11) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;完成获得积分&#39;,
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;,
+  PRIMARY KEY (`id`),
+  KEY `UCID` (`user_uuid`,`create_at`),
+  KEY `UTCID` (`user_uuid`,`task_id`,`create_at`),
+  KEY `create_at` (`create_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT=&#39;完成记录表&#39;</code></pre>
+<p>以上表就是基础表了。可以根据自己的业务特点增删一些字段，或增加一些其它表</p>
+<h3 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h3><p>用户等级积分关系通常不会改变，因此这里就不放在数据库中了。直接写在 php 文件里</p>
+<pre><code class="php">//等级与积分映射。可根据实际情况填写
+public $levelScoreMap = [
+  &#39;1&#39; =&gt; 0,
+  &#39;2&#39; =&gt; 100,
+  &#39;3&#39; =&gt; 300,
+  &#39;4&#39; =&gt; 400,
+  &#39;5&#39; =&gt; 500,
+  &#39;6&#39; =&gt; 750,
+  &#39;7&#39; =&gt; 1200,
+  &#39;8&#39; =&gt; 1800,
+  &#39;9&#39; =&gt; 2500,
+  &#39;10&#39; =&gt; 3500,
+  &#39;11&#39; =&gt; 5000,
+  &#39;12&#39; =&gt; 8000,
+  &#39;13&#39; =&gt; 15000,
+  &#39;14&#39; =&gt; 20000,
+  &#39;15&#39; =&gt; 30000,
+  &#39;16&#39; =&gt; 45000,
+];
+//七天连续签到天数与获得积分映射。可根据实际情况填写
+public $signInScoreMap = [
+    &#39;1&#39; =&gt; 5,
+    &#39;2&#39; =&gt; 5,
+    &#39;3&#39; =&gt; 5,
+    &#39;4&#39; =&gt; 15,
+    &#39;5&#39; =&gt; 5,
+    &#39;6&#39; =&gt; 5,
+    &#39;7&#39; =&gt; 30,
+];
 
-/**
-  * 获取这篇文章的评论以parent_id来分组
-  * @return static
-  */
-public function getComments()
-{
-    return $this-&gt;comments()-&gt;with(&#39;owner&#39;)-&gt;get()-&gt;groupBy(&#39;parent_id&#39;);
+/**根据用户的积分获取用户等级
+ * @param $levelScoreMap
+ * @param $levelArray
+ * @param $totalScore
+ * @return int
+ */
+public function getLevel($totalScore){
+  $levelScore = $this-&gt;levelScoreMap;
+  krsort($levelScore);
+  foreach ($levelScore as $level =&gt; $score) {
+    if ($totalScore &gt;= $score) {
+        return $level;
+    }
+  }
 }</code></pre>
-<p>Comments.php 文件</p>
-<pre><code class="php">/**
-  * 这个评论的所属用户
-  * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-  */
-public function owner()
-{
-    return $this-&gt;belongsTo(User::class, &#39;user_id&#39;);
-}
-
-/**
-  * 这个评论的子评论
-  * @return \Illuminate\Database\Eloquent\Relations\HasMany
-  */
-public function replies()
-{
-    return $this-&gt;hasMany(Comment::class, &#39;parent_id&#39;);
-}</code></pre>
-<h3 id="逻辑编写"><a href="#逻辑编写" class="headerlink" title="逻辑编写"></a>逻辑编写</h3><p>我们所要实现的嵌套评论其实在我们准备工作中已经 有点思路了，我们首先将一篇文章显示出来，同时利用文章与评论的一对多关系，进行显示所有的评论，但是我们的评论里面涉及到一个字段就是<code>parent_id</code>，这个字段其实非常的特殊，我们利用这个字段来进行分组，代码就是上面的<code>return $this-&gt;comments()-&gt;with(&#39;owner&#39;)-&gt;get()-&gt;groupBy(&#39;parent_id&#39;)</code>, 具体的过程如下:</p>
-<p>web.php 文件</p>
-<pre><code class="php">\Auth::loginUsingId(1); //用户id为1的登录
-
-//显示文章和相应的评论
-Route::get(&#39;/post/show/{post}&#39;, function (\App\Post $post) {
-    $post-&gt;load(&#39;comments.owner&#39;);
-    $comments = $post-&gt;getComments();
-    $comments[&#39;root&#39;] = $comments[&#39;&#39;];
-    unset($comments[&#39;&#39;]);
-    return view(&#39;posts.show&#39;, compact(&#39;post&#39;, &#39;comments&#39;));
-});
-
-//用户进行评论
-Route::post(&#39;post/{post}/comments&#39;, function (\App\Post $post) {
-    $post-&gt;comments()-&gt;create([
-        &#39;body&#39; =&gt; request(&#39;body&#39;),
-        &#39;user_id&#39; =&gt; \Auth::id(),
-        &#39;parent_id&#39; =&gt; request(&#39;parent_id&#39;, null),
-    ]);
-    return back();
-});</code></pre>
-<h3 id="视图代码"><a href="#视图代码" class="headerlink" title="视图代码"></a>视图代码</h3><p>视图方面我们需要实现嵌套，那么随着用户互相评论的越来越多的话，那么嵌套的层级也就越多，所以说，我们这里需要使用各小技巧来显示整个评论，我们使用 <code>@include()</code> 函数来显示，那么我们试图的结构如下:</p>
-<ul>
-<li>comments<ul>
-<li>comments.blade.php</li>
-<li>form.blade.php</li>
-<li>list.blade.php</li>
-</ul>
+<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><ol>
+<li><p>任务系统和积分系统最好拆分开来。<br>这么做的原因有几个，一来是因为，任务系统和积分系统未必属于同一个业务层，比如，任务系统的支持很可能是别的更偏向 C 端的团队在做，而积分系统更加偏向基础功能团队在做。即使是小项目，也最好分开来，毕竟积分的来源可能不止签到，还有可能是别的什么任务，签到后期的奖励也可能从积分改成其他。二是任务系统积分系统向来是用户和喜欢薅羊毛的地方，高峰期的服务器压力会比较大，处理任务和积分的逻辑太复杂的话会严重影响用户体验甚至宕机，所以我个人是比较推荐业务上拆开来的做法，任务系统单独处理逻辑，处理完成后塞一个消息进 MQ/Redis，其他系统以异步队列的方式去消费队列，处理发放积分或者其他额外的操作的逻辑。</p>
 </li>
-<li>posts<ul>
-<li>show.blade.php</li>
-</ul>
+<li><p>并发问题。<br>这个问题应该是很多场景下要考虑的问题。有加积分就有消耗积分，要是这两个动作同时了怎么办？如果羊毛党水平比较高抓到了签到、任务的接口直接调接口一下子发送多个请求怎么办？这自然是要加分布式锁了，当然这也是个学问，锁的粒度上我们也吃过亏，任务上要加锁，积分上也是要加锁的，数据库上顺便也来个乐观锁吧。。。这个就看具体的业务需求上各自大显神通的，不过这个大体上的思路应该是没啥问题的。</p>
 </li>
-</ul>
-<p>代码如下:</p>
-<p>show.blade.php</p>
-<pre><code class="php">&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;en&quot;&gt;
-&lt;head&gt;
-    &lt;meta charset=&quot;utf-8&quot;&gt;
-    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;&gt;
-    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
-    &lt;link href=&quot;//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css&quot; rel=&quot;stylesheet&quot;&gt;
-&lt;/head&gt;
-&lt;body&gt;
-&lt;div class=&quot;container&quot; style=&quot;margin-top: 100px&quot;&gt;
-    &lt;div class=&quot;col-md-10 col-md-offset-1&quot;&gt;
-        &lt;h2&gt;{{$post->title}}&lt;/h2&gt;
-        &lt;h4&gt;{{$post->content}}&lt;/h4&gt;
-        &lt;hr&gt;
-        @include(&#39;comments.list&#39;,[&#39;collections&#39;=&gt;$comments[&#39;root&#39;]])
-        &lt;h3&gt;留下您的评论&lt;/h3&gt;
-        @include(&#39;comments.form&#39;,[&#39;parentId&#39;=&gt;$post-&gt;id])
-    &lt;/div&gt;
-&lt;/div&gt;
-&lt;/body&gt;
-&lt;/html&gt;</code></pre>
-<p>comment.blade.php</p>
-<pre><code class="php">&lt;div class=&quot;col-md-12&quot;&gt;
-    &lt;h5&gt;&lt;span style=&quot;color:#31b0d5&quot;&gt;{{$comment->owner->name}}&lt;/span&gt;:&lt;/h5&gt;
-    &lt;h5&gt;{{$comment->body}}&lt;/h5&gt;
-
-    @include(&#39;comments.form&#39;,[&#39;parentId&#39;=&gt;$comment-&gt;id])
-
-    @if(isset($comments[$comment-&gt;id]))
-        @include(&#39;comments.list&#39;,[&#39;collections&#39;=&gt;$comments[$comment-&gt;id]])
-    @endif
-    &lt;hr&gt;
-&lt;/div&gt;</code></pre>
-<p>form.blade.php</p>
-<pre><code class="php">&lt;form method=&quot;POST&quot; action=&quot;{{url('post/'.$post->id.'/comments')}}&quot; accept-charset=&quot;UTF-8&quot;&gt;
-    {{csrf_field()}}
-
-    @if(isset($parentId))
-        &lt;input type=&quot;hidden&quot; name=&quot;parent_id&quot; value=&quot;{{$parentId}}&quot;&gt;
-    @endif
-
-    &lt;div class=&quot;form-group&quot;&gt;
-        &lt;label for=&quot;body&quot; class=&quot;control-label&quot;&gt;Info:&lt;/label&gt;
-        &lt;textarea id=&quot;body&quot; name=&quot;body&quot;  class=&quot;form-control&quot; required=&quot;required&quot;&gt;&lt;/textarea&gt;
-    &lt;/div&gt;
-    &lt;button type=&quot;submit&quot; class=&quot;btn btn-success&quot;&gt;回复&lt;/button&gt;
-&lt;/form&gt;</code></pre>
-<p>list.blade.php</p>
-<pre><code class="php">@foreach($collections as $comment)
-    @include(&#39;comments.comment&#39;,[&#39;comment&#39;=&gt;$comment])
-@endforeach</code></pre>
+<li><p>对账问题。<br>这个问题是基于第一个问题产生的，系统间服务调用的一个基本原则就是互不信任，任务系统和积分系统拆分后，如何保证任务系统期望发放的积分跟积分中心实际发放的积分是一致的呢？如果说这中间任意一个系统出问题了怎么办？那就对账吧，明细账得对，总账也得对，对账的周期可以安排每天对一次明细，每月对一次总账。也是看具体业务需求而定了，实现上也很灵活，我们之前的方式是每天生成前一天的明细 CSV 文件，rsync 到积分系统的机器上，由积分系统对账并发送邮件报告对账结果，对账出问题了基本上是很高级别的故障等级了，双方基本上都是要第一时间找原因并修复的，补发或者扣除用户的积分。</p>
+</li>
+<li><p>反作弊问题。<br>积分是薅羊毛重灾区大家应该都有所耳闻，那反作弊自然也是要的，提高任务和积分的门槛，让普通用户能够正常收益而屏蔽掉作弊账号。这一点一般的小公司就比较不太好做了，一来技术上没有接触过自然是没有思路，二来也没有足够的人力物力来维护一个这样的系统。</p>
+</li>
+<li><p>由具体业务引出的其他问题。<br>比如：一个电商项目里如果积分可以用来抵扣订单的一部分费用，但是用户没有提交订单的时候这部分订单不算被消费，那么 “锁定 / 冻结积分” 这个操作应该怎么实现呢？如果需要实现积分的部分过期又怎么实现呢？如果在积分部分过期的基础上用户退款的积分需要返还这又怎么实现呢？</p>
+</li>
+</ol>
 
       
        <hr><span style="font-style: italic;color: gray;"> 欢迎指出任何有错误或不够清晰的表达。可以在下面评论区评论，也可以邮件至 ljheiseberg@163.com </span>
@@ -523,12 +543,12 @@ Route::post(&#39;post/{post}/comments&#39;, function (\App\Post $post) {
 
 
 <div class="article_copyright">
-    <p><span class="copy-title">文章标题:</span>Laravel嵌套评论的实现</p>
-    <p><span class="copy-title">文章字数:</span><span class="post-count">1.1k</span></p>
+    <p><span class="copy-title">文章标题:</span>会员积分体系设计</p>
+    <p><span class="copy-title">文章字数:</span><span class="post-count">2.9k</span></p>
     <p><span class="copy-title">本文作者:</span><a  title="LJHeisenberg">LJHeisenberg</a></p>
-    <p><span class="copy-title">发布时间:</span>2021-02-27, 20:30:44</p>
-    <p><span class="copy-title">最后更新:</span>2021-02-28, 00:23:27</p>
-    <span class="copy-title">原始链接:</span><a class="post-url" href="/2021/02/27/laravel-nested-comment-realization/" title="Laravel嵌套评论的实现">https://ljheisenberg1072.github.io/2021/02/27/laravel-nested-comment-realization/</a>
+    <p><span class="copy-title">发布时间:</span>2021-02-28, 00:54:44</p>
+    <p><span class="copy-title">最后更新:</span>2021-02-28, 01:06:57</p>
+    <span class="copy-title">原始链接:</span><a class="post-url" href="/2021/02/28/design-of-membership-points-system/" title="会员积分体系设计">https://ljheisenberg1072.github.io/2021/02/28/design-of-membership-points-system/</a>
     <p>
         <span class="copy-title">版权声明:</span><i class="fa fa-creative-commons"></i> <a rel="license noopener" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
     </p>
