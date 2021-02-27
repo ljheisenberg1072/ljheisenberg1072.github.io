@@ -6,15 +6,15 @@
   <meta name="keywords" content=" 会员 ">
   <meta name="description" content="会员积分体系设计 | LJHeisenberg&#39; Blog">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="description" content="页面未找到！">
+<meta name="description" content="个人简介ljheisenberg， 目前从事 PHP 及网站运维相关工作 终生学习，每日精进 最近在公司使用 Laravel 框架重构公司的项目 联系方式 QQ：2638484046 Email：ljheisenberg@163.com">
 <meta name="keywords" content="ljheisenberg">
 <meta property="og:type" content="website">
-<meta property="og:title" content="404">
-<meta property="og:url" content="https:&#x2F;&#x2F;ljheisenberg1072.github.io&#x2F;404.html">
+<meta property="og:title" content="关于自己">
+<meta property="og:url" content="https:&#x2F;&#x2F;ljheisenberg1072.github.io&#x2F;about&#x2F;index.html">
 <meta property="og:site_name" content="LJHeisenberg&#39; Blog">
-<meta property="og:description" content="页面未找到！">
+<meta property="og:description" content="个人简介ljheisenberg， 目前从事 PHP 及网站运维相关工作 终生学习，每日精进 最近在公司使用 Laravel 框架重构公司的项目 联系方式 QQ：2638484046 Email：ljheisenberg@163.com">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-11-20T02:41:04.523Z">
+<meta property="og:updated_time" content="2019-11-20T05:17:26.555Z">
 <meta name="twitter:card" content="summary">
 
 
@@ -155,7 +155,7 @@
     
         
             
-            <li><div data-rel="PHP">PHP<small>(1)</small></div>
+            <li><div data-rel="Member">Member<small>(1)</small></div>
                 
             </li>
             
@@ -163,7 +163,7 @@
     
         
             
-            <li><div data-rel="Member">Member<small>(1)</small></div>
+            <li><div data-rel="PHP">PHP<small>(1)</small></div>
                 
             </li>
             
@@ -222,11 +222,11 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a class="color1">Clean</a>
+        <a class="color3">会员</a>
     </li>
     
     <li class="article-tag-list-item">
-        <a class="color3">会员</a>
+        <a class="color1">Clean</a>
     </li>
     
     <div class="clearfix"></div>
@@ -251,20 +251,20 @@
             <span class="post-date" title="2021-02-27 20:30:44">2021/02/27</span>
         </a>
         
-        <a  class="PHP "
-           href="/2019/12/25/php-code-clean/"
-           data-tag="Clean"
-           data-author="" >
-            <span class="post-title" title="PHP 代码简洁之道">PHP 代码简洁之道</span>
-            <span class="post-date" title="2019-12-25 10:40:44">2019/12/25</span>
-        </a>
-        
         <a  class="Member "
            href="/2021/02/28/design-of-membership-points-system/"
            data-tag="会员"
            data-author="" >
             <span class="post-title" title="会员积分体系设计">会员积分体系设计</span>
             <span class="post-date" title="2021-02-28 00:54:44">2021/02/28</span>
+        </a>
+        
+        <a  class="PHP "
+           href="/2019/12/25/php-code-clean/"
+           data-tag="Clean"
+           data-author="" >
+            <span class="post-title" title="PHP 代码简洁之道">PHP 代码简洁之道</span>
+            <span class="post-date" title="2019-12-25 10:40:44">2019/12/25</span>
         </a>
         
     </nav>
@@ -303,7 +303,7 @@
     </div>
     <div class="article-meta">
         
-        创建时间:<time class="date" title='更新时间: 2021-02-28 01:06:57'>2021-02-28 00:54</time>
+        创建时间:<time class="date" title='更新时间: 2021-02-28 01:13:05'>2021-02-28 00:54</time>
         
     </div>
     <div class="article-meta">
@@ -338,7 +338,7 @@
     
     <div class="toc-ref">
     
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#需求场景分析"><span class="toc-text">需求场景分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#其它"><span class="toc-text">其它</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#思考"><span class="toc-text">思考</span></a></li></ol></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#需求场景分析"><span class="toc-text">需求场景分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#其它"><span class="toc-text">其它</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#思考"><span class="toc-text">思考</span></a></li></ol>
     
 <style>
     .left-col .switch-btn,
@@ -476,7 +476,7 @@
   KEY `create_at` (`create_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT=&#39;完成记录表&#39;</code></pre>
 <p>以上表就是基础表了。可以根据自己的业务特点增删一些字段，或增加一些其它表</p>
-<h3 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h3><p>用户等级积分关系通常不会改变，因此这里就不放在数据库中了。直接写在 php 文件里</p>
+<h2 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h2><p>用户等级积分关系通常不会改变，因此这里就不放在数据库中了。直接写在 php 文件里</p>
 <pre><code class="php">//等级与积分映射。可根据实际情况填写
 public $levelScoreMap = [
   &#39;1&#39; =&gt; 0,
@@ -522,7 +522,7 @@ public function getLevel($totalScore){
     }
   }
 }</code></pre>
-<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><ol>
+<h2 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h2><ol>
 <li><p>任务系统和积分系统最好拆分开来。<br>这么做的原因有几个，一来是因为，任务系统和积分系统未必属于同一个业务层，比如，任务系统的支持很可能是别的更偏向 C 端的团队在做，而积分系统更加偏向基础功能团队在做。即使是小项目，也最好分开来，毕竟积分的来源可能不止签到，还有可能是别的什么任务，签到后期的奖励也可能从积分改成其他。二是任务系统积分系统向来是用户和喜欢薅羊毛的地方，高峰期的服务器压力会比较大，处理任务和积分的逻辑太复杂的话会严重影响用户体验甚至宕机，所以我个人是比较推荐业务上拆开来的做法，任务系统单独处理逻辑，处理完成后塞一个消息进 MQ/Redis，其他系统以异步队列的方式去消费队列，处理发放积分或者其他额外的操作的逻辑。</p>
 </li>
 <li><p>并发问题。<br>这个问题应该是很多场景下要考虑的问题。有加积分就有消耗积分，要是这两个动作同时了怎么办？如果羊毛党水平比较高抓到了签到、任务的接口直接调接口一下子发送多个请求怎么办？这自然是要加分布式锁了，当然这也是个学问，锁的粒度上我们也吃过亏，任务上要加锁，积分上也是要加锁的，数据库上顺便也来个乐观锁吧。。。这个就看具体的业务需求上各自大显神通的，不过这个大体上的思路应该是没啥问题的。</p>
@@ -547,7 +547,7 @@ public function getLevel($totalScore){
     <p><span class="copy-title">文章字数:</span><span class="post-count">2.9k</span></p>
     <p><span class="copy-title">本文作者:</span><a  title="LJHeisenberg">LJHeisenberg</a></p>
     <p><span class="copy-title">发布时间:</span>2021-02-28, 00:54:44</p>
-    <p><span class="copy-title">最后更新:</span>2021-02-28, 01:06:57</p>
+    <p><span class="copy-title">最后更新:</span>2021-02-28, 01:13:05</p>
     <span class="copy-title">原始链接:</span><a class="post-url" href="/2021/02/28/design-of-membership-points-system/" title="会员积分体系设计">https://ljheisenberg1072.github.io/2021/02/28/design-of-membership-points-system/</a>
     <p>
         <span class="copy-title">版权声明:</span><i class="fa fa-creative-commons"></i> <a rel="license noopener" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
@@ -613,7 +613,7 @@ public function getLevel($totalScore){
     /*作者、标签的自动补全*/
     $(function () {
         $('.search').AutoComplete({
-            'data': ['#部署','#评论','#Clean','#会员',],
+            'data': ['#部署','#评论','#会员','#Clean',],
             'itemHeight': 20,
             'width': 418
         }).AutoComplete('show');
