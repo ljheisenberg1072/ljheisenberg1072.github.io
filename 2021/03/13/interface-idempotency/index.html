@@ -2,9 +2,9 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>关于自己 | LJHeisenberg&#39; Blog</title>
-  <meta name="keywords" content="">
-  <meta name="description" content="关于自己 | LJHeisenberg&#39; Blog">
+  <title>实现接口幂等性的几种方案 | LJHeisenberg&#39; Blog</title>
+  <meta name="keywords" content=" 幂等性 ">
+  <meta name="description" content="实现接口幂等性的几种方案 | LJHeisenberg&#39; Blog">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="description" content="页面未找到！">
 <meta name="keywords" content="ljheisenberg">
@@ -319,24 +319,36 @@
 </aside>
 <div class="post">
     <div class="pjax">
-        <article id="page-" class="article article-type-page" itemscope itemprop="blogPost">
+        <article id="post-interface-idempotency" class="article article-type-post" itemscope itemprop="blogPost">
     
-        <h1 class="article-title">关于自己</h1>
+        <h1 class="article-title">实现接口幂等性的几种方案</h1>
     
     <div class="article-meta">
         
         
         
+        <span class="book">
+            
+                <a  data-rel="Interface">Interface</a>
+            
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a class="color4">幂等性</a>
+            
+        </span>
         
     </div>
     <div class="article-meta">
         
-        创建时间:<time class="date" title='更新时间: 2019-11-20 13:17:26'>2019-11-20 11:31</time>
+        创建时间:<time class="date" title='更新时间: 2021-04-27 10:55:18'>2021-03-13 20:30</time>
         
     </div>
     <div class="article-meta">
         
-        <span>字数:54</span>
+        <span>字数:1.4k</span>
         
         
         <span id="busuanzi_container_page_pv">
@@ -366,7 +378,7 @@
     
     <div class="toc-ref">
     
-        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#个人简介"><span class="toc-text">个人简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#最近"><span class="toc-text">最近</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#联系方式"><span class="toc-text">联系方式</span></a></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#接口幂等性背景"><span class="toc-text">接口幂等性背景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#什么是幂等"><span class="toc-text">什么是幂等</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#什么情况下需要幂等"><span class="toc-text">什么情况下需要幂等</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#实现幂等的几种方案"><span class="toc-text">实现幂等的几种方案</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#来源加序列号"><span class="toc-text">来源加序列号</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#唯一索引（唯一字段）"><span class="toc-text">唯一索引（唯一字段）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#乐观锁"><span class="toc-text">乐观锁</span></a></li></ol></li></ol></li></ol>
     
 <style>
     .left-col .switch-btn,
@@ -382,14 +394,31 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="个人简介"><a href="#个人简介" class="headerlink" title="个人简介"></a>个人简介</h3><p>ljheisenberg，</p>
-<p>目前从事 PHP 及网站运维相关工作</p>
-<p>终生学习，每日精进</p>
-<h3 id="最近"><a href="#最近" class="headerlink" title="最近"></a>最近</h3><p>在公司使用 <code>Laravel</code> 框架重构公司的项目</p>
-<h3 id="联系方式"><a href="#联系方式" class="headerlink" title="联系方式"></a>联系方式</h3><ul>
-<li>QQ：2638484046</li>
-<li>Email：<a href="mailto:ljheisenberg@163.com" target="_blank" rel="noopener">ljheisenberg@163.com</a></li>
-</ul>
+        <h2 id="接口幂等性背景"><a href="#接口幂等性背景" class="headerlink" title="接口幂等性背景"></a>接口幂等性背景</h2><p>抢微信红包的时候我们都知道：一个红包一旦你抢过之后，以后无论你点多少次都是一样的结果。红包会提示你已经抢过此红包，而不会让你再抢一次。</p>
+<p>抢红包接口就是一个非常典型的幂等接口，抢一次和抢多次具有一样的效果。类似的接口在我们的开发过程中会有很多，比如在电商的下单过程中：</p>
+<p>订单创建接口,第一次调用返回超时了，重试机制一般会再次调用这个接口，此时我们不能因为这个接口被调了两次就创建两个一样的订单；<br>库存扣减接口，支付接口也是类似的逻辑；</p>
+<h2 id="什么是幂等"><a href="#什么是幂等" class="headerlink" title="什么是幂等"></a>什么是幂等</h2><p>幂等原先是数学中的一个概念，表示进行1次变换和进行N次变换产生的效果相同。</p>
+<p>当我们讨论接口的幂等性时一般是在说：以相同的请求调用这个接口一次和调用这个接口多次，对系统产生的影响是相同的。如果一个接口满足这个特性，那么我们就说这个<br>接口是一个幂等接口。比如上面的抢红包接口。</p>
+<blockquote>
+<p>PS：这边顺带说下幂等和防止重复提交的区别。<br>防止重复提交更多的是不让用户发起多次一样的请求。比如说用户在线购物下单时点了提交订单按钮，但是由于网络原因响应很慢，此时用户比较心急多次点击了订单提交按钮。<br>这种情况下就可能会造成多次下单。一般防止重复提交的方案有：将订单按钮置灰，跳转到结果页等。主要还是从客户端的角度来解决这个问题。</p>
+</blockquote>
+<blockquote>
+<p>幂等更多的是在重复请求已经发生，或是无法避免的情况下，采取一定的技术手段让这些重复请求不给系统带来副作用。</p>
+</blockquote>
+<h2 id="什么情况下需要幂等"><a href="#什么情况下需要幂等" class="headerlink" title="什么情况下需要幂等"></a>什么情况下需要幂等</h2><p>并不是所有接口都需要保证幂等性。以相同的请求调用这个接口一次或多次，需要给调用方返回一致的结果时，就要考虑将这个接口设计成幂等接口。</p>
+<h3 id="实现幂等的几种方案"><a href="#实现幂等的几种方案" class="headerlink" title="实现幂等的几种方案"></a>实现幂等的几种方案</h3><p>在我们设计幂等接口时重点关注新增接口和更新接口。因为查询和删除操作天生是幂等的（根据id查询和根据id删除多次对系统的影响是一致的），不需要我们提供额外的<br>技术手段来保证幂等性。</p>
+<p>对于新增和更新接口，大致有以下几种方案可以保证接口幂等性。</p>
+<h4 id="来源加序列号"><a href="#来源加序列号" class="headerlink" title="来源加序列号"></a>来源加序列号</h4><p>这是一种比较好理解，通用的方案。</p>
+<p>当调用接口时，参数中必须传入source字段和seq字段（这边举了一个我们项目中的列子，其实并不一定要传两个字段，传一个唯一的序列号uuid也能达到一样的效果）。服务端接收到请求，先判断自己是否是一个幂等接口，如果不是幂等接口就正常处理请求。</p>
+<p>如果是一个幂等接口，就将source和seq组成联合主键去数据库表中或者是Redis中查询，如果没有查询到，说明没处理过这个请求，然后正常处理请求就行了。处理完之后将处理结果和source和seq信息一个存入数据库或Redis中。</p>
+<p>如果根据source和seq能查询到，说明已经处理过这个请求了，直接将处理的结果返回即可。</p>
+<p>我们发现这种方案非常简单，而且易于理解，通用。但是如果请求量很大的话，存放请求记录的表会很大，这个时候可以将一段时间之前的记录删除，以提升性能。</p>
+<h4 id="唯一索引（唯一字段）"><a href="#唯一索引（唯一字段）" class="headerlink" title="唯一索引（唯一字段）"></a>唯一索引（唯一字段）</h4><p>这种方案适合用于执行新增操作的接口。</p>
+<p>比如说新增用户接口。我们将用户表中的身份证字段加上唯一索引。当同一个请求调用两次时，我们可以先根据身份证字段查询下用户是否存在，不存在的话再新增。存在的话就返回新增失败。<br>或者直接新增也行，数据库会抛异常，我们对异常处理返回前台就行了。</p>
+<p>PS：大家可能会有一个疑问，我同一个请求调用两次，第一返回新增成功，第二次返回失败，返回的结果不同啊。这个接口还是幂等接口么？<br>这边我要重申下概念，幂等强调的是接口一次调用和多次调用产生的效果是一样的。这边调用一次和调用多次都是新增了一个对象，所以还是满足幂等的。</p>
+<h4 id="乐观锁"><a href="#乐观锁" class="headerlink" title="乐观锁"></a>乐观锁</h4><p>这种方案适用于执行更新操作的接口。</p>
+<p>乐观锁只是在更新数据那一刻锁表，其他时间不锁表，所以相对于悲观锁，效率更高。 我们一般通过数据库来实现乐观锁，比较通用的做法是增加一个时间戳字段。</p>
+<pre><code class="sql">update table_xxx set name=#name#, timestamp = now where id=#id# and timestamp=#timestamp# --这个值由前端到数据中查询出来，再传过来</code></pre>
 
       
        <hr><span style="font-style: italic;color: gray;"> 欢迎指出任何有错误或不够清晰的表达。可以在下面评论区评论，也可以邮件至 ljheiseberg@163.com </span>
@@ -397,6 +426,18 @@
 </article>
 
 
+
+<div class="article_copyright">
+    <p><span class="copy-title">文章标题:</span>实现接口幂等性的几种方案</p>
+    <p><span class="copy-title">文章字数:</span><span class="post-count">1.4k</span></p>
+    <p><span class="copy-title">本文作者:</span><a  title="LJHeisenberg">LJHeisenberg</a></p>
+    <p><span class="copy-title">发布时间:</span>2021-03-13, 20:30:15</p>
+    <p><span class="copy-title">最后更新:</span>2021-04-27, 10:55:18</p>
+    <span class="copy-title">原始链接:</span><a class="post-url" href="/2021/03/13/interface-idempotency/" title="实现接口幂等性的几种方案">https://ljheisenberg1072.github.io/2021/03/13/interface-idempotency/</a>
+    <p>
+        <span class="copy-title">版权声明:</span><i class="fa fa-creative-commons"></i> <a rel="license noopener" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+    </p>
+</div>
 
 
 

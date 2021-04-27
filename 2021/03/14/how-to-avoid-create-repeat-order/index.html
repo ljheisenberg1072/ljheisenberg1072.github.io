@@ -2,9 +2,9 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>关于自己 | LJHeisenberg&#39; Blog</title>
-  <meta name="keywords" content="">
-  <meta name="description" content="关于自己 | LJHeisenberg&#39; Blog">
+  <title>如何避免重复下订单 | LJHeisenberg&#39; Blog</title>
+  <meta name="keywords" content=" 重复下单 ">
+  <meta name="description" content="如何避免重复下订单 | LJHeisenberg&#39; Blog">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="description" content="页面未找到！">
 <meta name="keywords" content="ljheisenberg">
@@ -319,24 +319,36 @@
 </aside>
 <div class="post">
     <div class="pjax">
-        <article id="page-" class="article article-type-page" itemscope itemprop="blogPost">
+        <article id="post-how-to-avoid-create-repeat-order" class="article article-type-post" itemscope itemprop="blogPost">
     
-        <h1 class="article-title">关于自己</h1>
+        <h1 class="article-title">如何避免重复下订单</h1>
     
     <div class="article-meta">
         
         
         
+        <span class="book">
+            
+                <a  data-rel="Order">Order</a>
+            
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a class="color5">重复下单</a>
+            
+        </span>
         
     </div>
     <div class="article-meta">
         
-        创建时间:<time class="date" title='更新时间: 2019-11-20 13:17:26'>2019-11-20 11:31</time>
+        创建时间:<time class="date" title='更新时间: 2021-04-27 11:32:14'>2021-03-14 19:20</time>
         
     </div>
     <div class="article-meta">
         
-        <span>字数:54</span>
+        <span>字数:2.3k</span>
         
         
         <span id="busuanzi_container_page_pv">
@@ -366,7 +378,7 @@
     
     <div class="toc-ref">
     
-        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#个人简介"><span class="toc-text">个人简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#最近"><span class="toc-text">最近</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#联系方式"><span class="toc-text">联系方式</span></a></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#为啥会下重了呢？"><span class="toc-text">为啥会下重了呢？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#原因1：客户端bug"><span class="toc-text">原因1：客户端bug</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#原因2-超时"><span class="toc-text">原因2: 超时</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#原因3-用户的App闪退-人工强退，之后重新打开重新下单"><span class="toc-text">原因3: 用户的App闪退/人工强退，之后重新打开重新下单</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#用幂等防止重复订单"><span class="toc-text">用幂等防止重复订单</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#客户端的流程"><span class="toc-text">客户端的流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#后端数据表设计"><span class="toc-text">后端数据表设计</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#下单的实现"><span class="toc-text">下单的实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#通知"><span class="toc-text">通知</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#如果还拦不住……"><span class="toc-text">如果还拦不住……</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#这么麻烦，有必要吗？"><span class="toc-text">这么麻烦，有必要吗？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#结论"><span class="toc-text">结论</span></a></li></ol>
     
 <style>
     .left-col .switch-btn,
@@ -382,14 +394,90 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="个人简介"><a href="#个人简介" class="headerlink" title="个人简介"></a>个人简介</h3><p>ljheisenberg，</p>
-<p>目前从事 PHP 及网站运维相关工作</p>
-<p>终生学习，每日精进</p>
-<h3 id="最近"><a href="#最近" class="headerlink" title="最近"></a>最近</h3><p>在公司使用 <code>Laravel</code> 框架重构公司的项目</p>
-<h3 id="联系方式"><a href="#联系方式" class="headerlink" title="联系方式"></a>联系方式</h3><ul>
-<li>QQ：2638484046</li>
-<li>Email：<a href="mailto:ljheisenberg@163.com" target="_blank" rel="noopener">ljheisenberg@163.com</a></li>
-</ul>
+        <p>电子交易的一个很基本的问题，就是避免用户下重复订单。用户明明想买一次，结果一看下了两个单。如果没有及时发现，就会带来额外的物流成本和扯皮。对商家的信誉也不好看。</p>
+<p>从技术上看，这是一个分布式一致性问题；但实际上，技术无法100%解决这类问题，得结合多种手段综合处理。这里就来说道说道。</p>
+<h2 id="为啥会下重了呢？"><a href="#为啥会下重了呢？" class="headerlink" title="为啥会下重了呢？"></a>为啥会下重了呢？</h2><h3 id="原因1：客户端bug"><a href="#原因1：客户端bug" class="headerlink" title="原因1：客户端bug"></a>原因1：客户端bug</h3><p>比如下单的按键在点按之后，在没有收到服务器请求之前，按键的状态没有设为已禁用状态，还可以被按。又或者，在触摸屏下，用户手指的点按可能被手机操作系统识别为多次点击。</p>
+<p>嗯，谁能保证客户端不偶尔出个什么bug 呢。</p>
+<h3 id="原因2-超时"><a href="#原因2-超时" class="headerlink" title="原因2: 超时"></a>原因2: 超时</h3><p>用户的设备与服务器之间可能是不稳定的网路。这样一个下单请求过去，返回不一定回得来。超时最大的问题是: 从用户的角度，他无法确定下单的请求是还没到服务器，还是已经到了服务器但是返回丢失了。——用户无法区分到底这个单下了还是没下。</p>
+<p>这样在等待一个超时后，UI可能会提示用户下单超时，请重复再试。</p>
+<p><img src="/images/repeat-order/pic_001.jpg" alt="下单超时"></p>
+<h3 id="原因3-用户的App闪退-人工强退，之后重新打开重新下单"><a href="#原因3-用户的App闪退-人工强退，之后重新打开重新下单" class="headerlink" title="原因3: 用户的App闪退/人工强退，之后重新打开重新下单"></a>原因3: 用户的App闪退/人工强退，之后重新打开重新下单</h3><p>也许可以使用一些技术手段避免用户下重单，但是心急的用户可能会重启流程/重启App/重启手机。在这种强制的手段下，任何技术手段都会失效——用户压根就不让你的技术执行，你怎么玩？</p>
+<p>在这些条件下，如何避免用户多下了一笔订单呢？</p>
+<h2 id="用幂等防止重复订单"><a href="#用幂等防止重复订单" class="headerlink" title="用幂等防止重复订单"></a>用幂等防止重复订单</h2><p>在技术方面，这是一个分布式一致性的问题，即客户端和服务器端对某个订单是否成功/失败达成一致。防止重单的关键是使用一个由客户端生成的，可用于避免重复的key，俗称dedup key（deduplicate key之意）。这个key可以用任意可以保证全局唯一性的方式生成，比如uuid。客户端和服务器需要使用这个dedup key作为串联条件，一起解决去重问题。</p>
+<h2 id="客户端的流程"><a href="#客户端的流程" class="headerlink" title="客户端的流程"></a>客户端的流程</h2><p>客户端需要实现这样一个下单界面。用户点击【确认下单】时，应该产生一个独一无二的<code>dedup key</code>，连定订单数据发送给服务器端。在服务器返回之前，该界面应该一直等待，直到服务器响应成功/失败或者超时发生（比如15秒后，收不到服务器响应）。如果超时发生，应该向用户提示是否重试下单或者退出该界面。当用户点击【重试】时，应该用刚刚生成的<code>dedup key</code>来再次发送下单请求——如果用户一直不退出这个流程，每次用户点击重试，都应该用这个<code>dedup key</code>来重试下单，直到服务器正常返回，或者用户放弃返回。</p>
+<p><img src="/images/repeat-order/pic_002.jpg" alt="下单的客户端流程"></p>
+<h2 id="后端数据表设计"><a href="#后端数据表设计" class="headerlink" title="后端数据表设计"></a>后端数据表设计</h2><p>后端在订单数据表中，需要增加<code>dedup_key</code>这列，并设置唯一约束。</p>
+<pre><code class="sql">create table order(
+  # ...
+  dedup_key varchar(60) not null comment &#39;key to pretend order duplication&#39;,
+  # ...
+  unique uniq_dedup_key(dedup_key)
+);</code></pre>
+<h2 id="下单的实现"><a href="#下单的实现" class="headerlink" title="下单的实现"></a>下单的实现</h2><p>在实现下单逻辑时，基于该dedup_key实现一个”create-or-get”语义的下单接口——简单说就是</p>
+<p>如果带有指定dedup_key的订单已经存在，则直接返回；否则，用该<code>dedup_key</code>下单。<br>用伪代码表示大概是：</p>
+<pre><code class="php">@Transactional
+Order createOrder(Integer userId, String prodCode, Decimal amount, String dedupKey) {
+  try {
+    String orderId = createOrder(userId, prodCode, amount, deupKey); // insert a new order
+    Order order = getOrderById(orderId); // read order from db
+    order.setDuplicated(false);
+    return order;
+  } catch(UniqueKeyViolationException e) {
+    // if duplicated order has existed
+    Order order = getOrderByDedupKey(dedupKey);
+    order.setDuplicated(true);
+    return order;
+  } catch (Exception e) {
+    // hanlde other errors and rollback transaction ...
+  }
+}</code></pre>
+<p>这时，这段下单代码总是能返回一个订单（除非发生一些DB挂了之类的错误），要么是新创建的，要么就是一个已经存在的单。注意，最好在订单里增加一个属性（比如例子中用“duplicated”）来表示这个订单是这次新生成的，还是因为幂等而直接返回的。这样前端可以有针对性的对这两种情况提示不同的文案。</p>
+<p>技术搞定幂等就足够了吗？<br>上面的流程没有考虑一种情况，就是用户中途强制退出客户端，或者直接点击【返回】回到产品页，重新走下单流程。这个时候客户端就无法判断用户到底是想重新下单，还是想第二次下单。此时，可以从产品设计上考虑一下。</p>
+<p>比如，在客户端缓存一个表，记录所有没有确认结果的订单。</p>
+<table>
+<thead>
+<tr>
+<th align="right"></th>
+<th align="center">产品代码</th>
+<th align="center">产品数量</th>
+<th align="center">金额</th>
+<th align="left">dedup key</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="right">未确认订单1</td>
+<td align="center">A</td>
+<td align="center">1</td>
+<td align="center">500</td>
+<td align="left">xxx-yyy-zzz</td>
+</tr>
+<tr>
+<td align="right">未确认订单2</td>
+<td align="center">B</td>
+<td align="center">2</td>
+<td align="center">1000</td>
+<td align="left">aaa-bbb-ccc</td>
+</tr>
+<tr>
+<td align="right">…</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="left"></td>
+</tr>
+</tbody></table>
+<p>通过这个表，我们可以猜一下用户的意图。比如，如果用户重新提交了一笔订单，其产品代码、金额与表中记录的某条完全一致，就可以提示一下用户:</p>
+<p><img src="/images/repeat-order/pic_003.jpg" alt="提示一下用户是不是下重了"></p>
+<p>如果用户想重试，可以继续用表中对应记录的dedup key重新发起下单。</p>
+<p>这样不是绝对准确的，仅仅是尽量的减少用户误操作的可能性。当然，在产品设计上可以能出于用户交互简化，不一定真的会这样做。这就需要其他机制来配合，比如“通知”。</p>
+<h2 id="通知"><a href="#通知" class="headerlink" title="通知"></a>通知</h2><p>一旦服务器下单成功，可以通过某种通知机制（如APNS、Websocket）主动将订单推送至客户端，强行让客户端重新拉取最新的订单信息，并配合“未确认订单”表，以通知Badge/弹框等方式提示用户刚刚一笔状态未知的订单成功/失败了。</p>
+<p>另外一种手段就是，服务器端实时扫描用户的下单数据，一旦发现可能的重单，就立刻通知客服主动联系用户，及时处理问题。</p>
+<h2 id="如果还拦不住……"><a href="#如果还拦不住……" class="headerlink" title="如果还拦不住……"></a>如果还拦不住……</h2><p>经过层层阻拦，可能还是会有用户误操作，直到收到两份商品才发现下重了。此时就得依靠运营/客服的支持了。提供用户申诉的手段，让用户提出哪些订单是重复的，并且由销售系统店家、商品提供者和买家三方共同根据用户操作的记录来协商如何处理。我们需要让技术帮助让这种人工处理的几率尽量小。因为每次处理都会耗费较大的人工成本，和一些运营费用（比如赔款、小礼品等等）。</p>
+<h2 id="这么麻烦，有必要吗？"><a href="#这么麻烦，有必要吗？" class="headerlink" title="这么麻烦，有必要吗？"></a>这么麻烦，有必要吗？</h2><p>这要分业务场景，对于很多电商来讲可能不是必要的。因为从用户下单到订单被审核处理进入到发货阶段需要一定的时间（可能是半小时～1小时），并且一定是支付成功后才会开始进行下一步流程。在这个时间段，用户大概率能从网络错误中恢复过来，自行区分是否下重了。配合客服主动提示，会极大的降低出问题的概率。</p>
+<p>但是对于理财服务来说，这种去重就非常必要了。因为</p>
+<p>“下单+支付”。用户购买理财往往是“下单+支付”一起执行，不可以单独下单/单独支付<br>用户的入金可能很大。例如数万，数十万<br>准确性丢失。如果一旦下重了，有可能影响用户的投资资金配置的准确性。<br>撤销难。部分理财产品存在下单不可撤销的问题；或者即便撤销，资金也无法立刻回款。等到回款，可能这个购入机会就错过去了。例如对于基金交易，错过1个交易日，价格就会发生变动。<br>基于这些特性，在理财产品中，就要竭尽全力的去重。</p>
+<h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><p>以上所讲是处理重复订单问题的一般方法。你可以注意到，无论多么好的技术，也不可能100%的拦截所有的可能性，必须依靠技术+产品设计+运营支持的综合手段才能解决这类问题。</p>
+<p>另外，本文还没涉及到关于订单支付（支付也可能重复哦）带来的进一步的复杂性，也没有讨论在高并发情况下的性能优化，仅仅讨论下单本身的问题。所以可以想象一下现实中的交易业务比这里的说的要复杂得多。</p>
 
       
        <hr><span style="font-style: italic;color: gray;"> 欢迎指出任何有错误或不够清晰的表达。可以在下面评论区评论，也可以邮件至 ljheiseberg@163.com </span>
@@ -397,6 +485,18 @@
 </article>
 
 
+
+<div class="article_copyright">
+    <p><span class="copy-title">文章标题:</span>如何避免重复下订单</p>
+    <p><span class="copy-title">文章字数:</span><span class="post-count">2.3k</span></p>
+    <p><span class="copy-title">本文作者:</span><a  title="LJHeisenberg">LJHeisenberg</a></p>
+    <p><span class="copy-title">发布时间:</span>2021-03-14, 19:20:20</p>
+    <p><span class="copy-title">最后更新:</span>2021-04-27, 11:32:14</p>
+    <span class="copy-title">原始链接:</span><a class="post-url" href="/2021/03/14/how-to-avoid-create-repeat-order/" title="如何避免重复下订单">https://ljheisenberg1072.github.io/2021/03/14/how-to-avoid-create-repeat-order/</a>
+    <p>
+        <span class="copy-title">版权声明:</span><i class="fa fa-creative-commons"></i> <a rel="license noopener" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+    </p>
+</div>
 
 
 
